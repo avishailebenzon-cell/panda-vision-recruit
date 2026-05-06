@@ -3,7 +3,8 @@ from contextlib import asynccontextmanager
 import logging
 from app.config import get_settings
 from app.database import init_db
-from app.api import health, candidates, jobs
+from app.api import health, candidates, jobs, email_scanner
+from app.tasks.scheduler import task_scheduler
 
 # Configure logging
 logging.basicConfig(
@@ -23,10 +24,18 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized successfully")
 
+    # Start background task scheduler
+    try:
+        task_scheduler.start()
+    except Exception as e:
+        logger.warning(f"Could not start background scheduler: {e}")
+        logger.info("Email scanning will need to be triggered manually via API")
+
     yield
 
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
+    task_scheduler.stop()
 
 
 app = FastAPI(
@@ -40,6 +49,7 @@ app = FastAPI(
 app.include_router(health.router)
 app.include_router(candidates.router)
 app.include_router(jobs.router)
+app.include_router(email_scanner.router)
 
 
 @app.get("/")

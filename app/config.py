@@ -10,6 +10,16 @@ class Settings(BaseSettings):
     pipedrive_api_key: str = ""
     pipedrive_base_url: str = "https://api.pipedrive.com/v1"
 
+    # Azure / Microsoft Graph
+    azure_tenant_id: str = ""
+    azure_client_id: str = ""
+    azure_client_secret: str = ""
+    email_address: str = "jobs@pandatech.co.il"
+
+    # Email scanning
+    email_scan_interval_minutes: int = 30
+    email_scan_limit: int = 50
+
     # Application
     app_name: str = "Panda-Vision Recruit"
     app_version: str = "0.1.0"

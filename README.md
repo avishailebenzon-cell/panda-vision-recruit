@@ -118,6 +118,12 @@ The API will be available at `http://localhost:8000`
 - `GET /jobs/{job_id}` - Get job details
 - `POST /jobs/sync-from-pipedrive` - Manually sync jobs from Pipedrive
 
+### Email Scanning
+- `POST /email/scan` - Trigger manual email scan and candidate processing
+- `GET /email/scan-logs` - List email scan logs
+  - Query params: `status`, `skip`, `limit`
+- `GET /email/scan-logs/{log_id}` - Get detailed scan log information
+
 ## Pipedrive Integration
 
 The Pipedrive service automatically:
@@ -130,6 +136,48 @@ The Pipedrive service automatically:
 Set the following environment variables:
 - `PIPEDRIVE_API_KEY`: Your Pipedrive API key
 - `PIPEDRIVE_BASE_URL`: Pipedrive API endpoint (default: https://api.pipedrive.com/v1)
+
+## Email Scanning & CV Processing
+
+The email scanner monitors the `jobs@pandatech.co.il` mailbox and automatically processes incoming CVs.
+
+### Features
+- **Automated Email Monitoring**: Fetches unread emails with attachments
+- **Document Parsing**: Extracts text from PDF, DOCX, and DOC files
+- **Duplicate Detection**: Prevents duplicate candidates using email and name matching
+- **Security Classification**: Automatically classifies candidates based on keyword analysis
+- **Background Tasks**: Periodic scanning runs automatically (configurable interval)
+- **Detailed Logging**: Tracks all scan cycles with success/error metrics
+
+### Supported File Formats
+- **PDF** - Parsed using PyMuPDF (fitz)
+- **DOCX** - Parsed using python-docx
+- **DOC** - Parsed using textract or python-docx fallback
+
+### Security Classification
+The system identifies security clearance requirements using keyword matching:
+- **Top Secret**: סוד עליון, top secret, סוד מדינה
+- **Secret**: secret, סוד, סודי
+- **Confidential**: confidential, חסוי, sensitive
+
+### Configuration
+Set the following environment variables:
+- `AZURE_TENANT_ID`: Your Azure/Office 365 tenant ID
+- `AZURE_CLIENT_ID`: Application (client) ID
+- `AZURE_CLIENT_SECRET`: Client secret
+- `EMAIL_ADDRESS`: Email address to monitor (default: jobs@pandatech.co.il)
+- `EMAIL_SCAN_INTERVAL_MINUTES`: How often to scan (default: 30)
+- `EMAIL_SCAN_LIMIT`: Max emails to process per scan (default: 50)
+
+### Workflow
+1. System scans for unread emails with attachments
+2. Downloads and parses document attachments
+3. Extracts candidate information (name, email, phone, location)
+4. Performs duplicate check based on email and name similarity
+5. Classifies security level based on document content
+6. Creates new candidate or updates existing one
+7. Marks email as read
+8. Logs scan results (created, updated, errors)
 
 ## Database Migrations (Future)
 
