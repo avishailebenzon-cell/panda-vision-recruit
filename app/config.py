@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     email_scan_interval_minutes: int = 30
     email_scan_limit: int = 50
 
+    # Claude API
+    anthropic_api_key: str = ""
+    claude_model: str = "claude-opus-4-7"
+
     # Application
     app_name: str = "Panda-Vision Recruit"
     app_version: str = "0.1.0"
