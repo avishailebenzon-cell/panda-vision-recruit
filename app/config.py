@@ -3,8 +3,13 @@ from functools import lru_cache
 
 
 class Settings(BaseSettings):
-    # Database
+    # Database - Supabase
     database_url: str = "postgresql://user:password@localhost:5432/panda_vision_recruit"
+
+    # Supabase Configuration
+    supabase_url: str = ""
+    supabase_key: str = ""
+    supabase_storage_bucket: str = "cv-files"
 
     # Pipedrive
     pipedrive_api_key: str = ""

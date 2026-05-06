@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from app.services.azure_email import AzureEmailService
 from app.services.document_parser import DocumentParser
 from app.services.candidate_processor import CandidateProcessor
+from app.services.supabase_storage import SupabaseStorageClient
 from app.models.email_logs import EmailScanLog
 
 logger = logging.getLogger(__name__)
@@ -19,6 +20,7 @@ class EmailScanner:
         self.azure_service = AzureEmailService()
         self.document_parser = DocumentParser()
         self.candidate_processor = CandidateProcessor(db)
+        self.storage_client = SupabaseStorageClient()
 
     async def scan_and_process_emails(self) -> Dict[str, Any]:
         """
@@ -96,6 +98,7 @@ class EmailScanner:
 
         finally:
             await self.azure_service.close()
+            await self.storage_client.close()
 
         return result
 
@@ -197,18 +200,52 @@ class EmailScanner:
         # Classify security level
         security_level = self.candidate_processor.classify_security_level(extracted_text)
 
-        # Save or update candidate
-        candidate, is_new = self.candidate_processor.save_or_update_candidate(
-            email=candidate_info["email"],
-            first_name=candidate_info["first_name"],
-            last_name=candidate_info["last_name"],
-            phone=candidate_info["phone"],
-            location=candidate_info["location"],
-            security_level=security_level,
-            email_received_date=received_date,
-            resume_text=extracted_text,
-            resume_url=None,
-        )
+        # Upload CV to Supabase Storage
+        resume_url = None
+        if extracted_text:
+            # We'll need to get candidate_id first, so save without URL then upload
+            temp_candidate, is_new = self.candidate_processor.save_or_update_candidate(
+                email=candidate_info["email"],
+                first_name=candidate_info["first_name"],
+                last_name=candidate_info["last_name"],
+                phone=candidate_info["phone"],
+                location=candidate_info["location"],
+                security_level=security_level,
+                email_received_date=received_date,
+                resume_text=extracted_text,
+                resume_url=None,
+            )
+
+            # Upload original file to storage
+            try:
+                resume_url, upload_success = await self.storage_client.upload_cv(
+                    file_content=attachment_content,
+                    filename=filename,
+                    candidate_id=temp_candidate.id,
+                )
+
+                if upload_success and resume_url:
+                    # Update candidate with storage URL
+                    temp_candidate.cv_url = resume_url
+                    self.db.commit()
+                    logger.info(f"Updated candidate {temp_candidate.id} with CV URL: {resume_url}")
+            except Exception as e:
+                logger.warning(f"Failed to upload CV to storage: {e}")
+
+            candidate = temp_candidate
+        else:
+            # Save or update candidate
+            candidate, is_new = self.candidate_processor.save_or_update_candidate(
+                email=candidate_info["email"],
+                first_name=candidate_info["first_name"],
+                last_name=candidate_info["last_name"],
+                phone=candidate_info["phone"],
+                location=candidate_info["location"],
+                security_level=security_level,
+                email_received_date=received_date,
+                resume_text=extracted_text,
+                resume_url=None,
+            )
 
         if is_new:
             result["candidates_created"] += 1
