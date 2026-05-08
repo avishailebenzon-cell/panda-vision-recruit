@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import Optional
-from app.database import get_db
+from app.database import get_db_sync
 from app.models.jobs import Job, JobPriority, SecurityLevel
 from app.services.pipedrive import PipedriveService
 import logging
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
 
 @router.get("/")
 async def get_jobs(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
     priority: Optional[str] = Query(None, description="Filter by priority"),
@@ -56,7 +56,7 @@ async def get_jobs(
 
 
 @router.get("/{job_id}")
-async def get_job(job_id: int, db: Session = Depends(get_db)):
+async def get_job(job_id: int, db: Session = Depends(get_db_sync)):
     """Get a specific job by ID."""
     try:
         job = db.query(Job).filter(Job.id == job_id).first()
@@ -86,7 +86,7 @@ async def get_job(job_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/sync-from-pipedrive")
-async def sync_jobs_from_pipedrive(db: Session = Depends(get_db)):
+async def sync_jobs_from_pipedrive(db: Session = Depends(get_db_sync)):
     """Trigger manual sync of jobs from Pipedrive."""
     try:
         service = PipedriveService(db=db)

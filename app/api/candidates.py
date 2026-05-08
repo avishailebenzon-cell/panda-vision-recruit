@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
-from app.database import get_db
+from app.database import get_db_sync
 from app.models.candidates import Candidate, CandidateStatus, SecurityLevel
 import logging
 
@@ -27,7 +27,7 @@ class CandidateResponse:
 
 @router.get("/")
 async def get_candidates(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
     status: Optional[str] = Query(None, description="Filter by status: 'active' or 'deleted'"),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
@@ -77,7 +77,7 @@ async def get_candidates(
 
 
 @router.get("/{candidate_id}")
-async def get_candidate(candidate_id: int, db: Session = Depends(get_db)):
+async def get_candidate(candidate_id: int, db: Session = Depends(get_db_sync)):
     """Get a specific candidate by ID."""
     try:
         candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()

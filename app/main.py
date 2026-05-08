@@ -3,7 +3,7 @@ from contextlib import asynccontextmanager
 import logging
 from app.config import get_settings
 from app.database import init_db
-from app.api import health, candidates, jobs, email_scanner, agents
+from app.api import health, auth, candidates, jobs, email_scanner, agents
 from app.tasks.scheduler import task_scheduler
 
 # Configure logging
@@ -47,6 +47,7 @@ app = FastAPI(
 
 # Include routers
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(candidates.router)
 app.include_router(jobs.router)
 app.include_router(email_scanner.router)

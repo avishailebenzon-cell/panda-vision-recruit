@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import logging
 
-from app.database import get_db
+from app.database import get_db_sync
 from app.models.agent_tasks import AgentTask, AgentLog, FeedbackLog, AgentType, TaskStatus
 from app.models.matches import Match
 from app.agents.orchestrator_engine import OrchestratorEngine
@@ -18,7 +18,7 @@ router = APIRouter(prefix="/agents", tags=["agents"])
 async def start_matching_for_job(
     job_id: int,
     max_candidates: int = Query(50, ge=1, le=200),
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ):
     """
     Start the full matching workflow for a job.
@@ -48,7 +48,7 @@ async def start_matching_for_job(
 
 @router.get("/tasks")
 async def get_agent_tasks(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
     status: Optional[str] = Query(None),
     agent_type: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
@@ -99,7 +99,7 @@ async def get_agent_tasks(
 
 
 @router.get("/tasks/{task_id}")
-async def get_agent_task_details(task_id: int, db: Session = Depends(get_db)):
+async def get_agent_task_details(task_id: int, db: Session = Depends(get_db_sync)):
     """Get detailed information about a specific task."""
     try:
         task = db.query(AgentTask).filter(AgentTask.id == task_id).first()
@@ -151,7 +151,7 @@ async def submit_match_feedback(
     match_id: int,
     was_correct: bool,
     feedback_text: Optional[str] = None,
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
 ):
     """
     Submit feedback on a match for agent learning.
@@ -193,7 +193,7 @@ async def submit_match_feedback(
 
 
 @router.get("/status")
-async def get_system_status(db: Session = Depends(get_db)):
+async def get_system_status(db: Session = Depends(get_db_sync)):
     """Get overall system status and agent statistics."""
     try:
         watchdog = AgentWatchdog(db)
@@ -224,7 +224,7 @@ async def get_system_status(db: Session = Depends(get_db)):
 
 
 @router.post("/watchdog/restart-stuck")
-async def restart_stuck_tasks(db: Session = Depends(get_db)):
+async def restart_stuck_tasks(db: Session = Depends(get_db_sync)):
     """
     Manually trigger watchdog to check and restart stuck tasks.
     """

@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import Optional
 import logging
 
-from app.database import get_db
+from app.database import get_db_sync
 from app.models.email_logs import EmailScanLog
 from app.services.email_scanner import EmailScanner
 
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/email", tags=["email"])
 
 
 @router.post("/scan")
-async def trigger_email_scan(db: Session = Depends(get_db)):
+async def trigger_email_scan(db: Session = Depends(get_db_sync)):
     """
     Manually trigger email scanning and candidate processing.
 
@@ -48,7 +48,7 @@ async def trigger_email_scan(db: Session = Depends(get_db)):
 
 @router.get("/scan-logs")
 async def get_scan_logs(
-    db: Session = Depends(get_db),
+    db: Session = Depends(get_db_sync),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
     status: Optional[str] = Query(None),
@@ -97,7 +97,7 @@ async def get_scan_logs(
 
 
 @router.get("/scan-logs/{log_id}")
-async def get_scan_log_details(log_id: int, db: Session = Depends(get_db)):
+async def get_scan_log_details(log_id: int, db: Session = Depends(get_db_sync)):
     """Get detailed information about a specific scan log."""
     try:
         log = db.query(EmailScanLog).filter(EmailScanLog.id == log_id).first()

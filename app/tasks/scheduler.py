@@ -4,12 +4,23 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
 from app.config import get_settings
-from app.database import SessionLocal
+from app.database import AsyncSessionLocal
 from app.services.email_scanner import EmailScanner
 
 logger = logging.getLogger(__name__)
 
 settings = get_settings()
+
+
+async def run_email_scan_async():
+    """Async email scan task."""
+    async with AsyncSessionLocal() as db:
+        try:
+            scanner = EmailScanner(db)
+            result = await scanner.scan_and_process_emails()
+            logger.info(f"Email scan task completed: {result}")
+        except Exception as e:
+            logger.error(f"Error in email scan task: {e}")
 
 
 def run_email_scan():
@@ -23,15 +34,10 @@ def run_email_scan():
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
 
-    db = SessionLocal()
     try:
-        scanner = EmailScanner(db)
-        result = loop.run_until_complete(scanner.scan_and_process_emails())
-        logger.info(f"Email scan task completed: {result}")
+        loop.run_until_complete(run_email_scan_async())
     except Exception as e:
-        logger.error(f"Error in email scan task: {e}")
-    finally:
-        db.close()
+        logger.error(f"Error running email scan: {e}")
 
 
 class TaskScheduler:

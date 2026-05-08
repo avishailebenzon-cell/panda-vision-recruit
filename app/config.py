@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     # Database - Supabase
     database_url: str = "postgresql://user:password@localhost:5432/panda_vision_recruit"
 
+    # Authentication
+    secret_key: str = "dev-secret-key-change-in-production"
+
     # Supabase Configuration
     supabase_url: str = ""
     supabase_key: str = ""
