@@ -30,3 +30,4 @@ anthropic==0.25.1
 
 # Supabase (optional - we use httpx for Storage API)
 # supabase==2.5.0  # Can use if additional features needed
+gunicorn==21.2.0
