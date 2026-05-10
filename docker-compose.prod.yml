@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: panda-vision-backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://panda_user:secure_password@postgres:5432/panda_vision_db
+      SECRET_KEY: ${SECRET_KEY}
+      PIPEDRIVE_API_KEY: ${PIPEDRIVE_API_KEY}
+      DEBUG: "false"
+    depends_on:
+      - postgres
+    networks:
+      - panda-network
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: panda-vision-postgres
+    environment:
+      POSTGRES_USER: panda_user
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: panda_vision_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - panda-network
+
+volumes:
+  postgres_data:
+
+networks:
+  panda-network:
+    driver: bridge
