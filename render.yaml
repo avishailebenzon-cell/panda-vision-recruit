@@ -1,0 +1,65 @@
+services:
+  - type: web
+    name: panda-vision-recruit
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 4 -b 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker app.main:app
+    envVars:
+      - key: DATABASE_URL
+        scope: run
+        sync: false
+      - key: SUPABASE_URL
+        scope: run
+        sync: false
+      - key: SUPABASE_KEY
+        scope: run
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        scope: run
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        scope: run
+        value: cv-files
+      - key: PIPEDRIVE_API_KEY
+        scope: run
+        sync: false
+      - key: PIPEDRIVE_BASE_URL
+        scope: run
+        value: https://api.pipedrive.com/v1
+      - key: AZURE_TENANT_ID
+        scope: run
+        sync: false
+      - key: AZURE_CLIENT_ID
+        scope: run
+        sync: false
+      - key: AZURE_CLIENT_SECRET
+        scope: run
+        sync: false
+      - key: EMAIL_ADDRESS
+        scope: run
+        value: jobs@pandatech.co.il
+      - key: EMAIL_SCAN_INTERVAL_MINUTES
+        scope: run
+        value: "30"
+      - key: EMAIL_SCAN_LIMIT
+        scope: run
+        value: "50"
+      - key: ANTHROPIC_API_KEY
+        scope: run
+        sync: false
+      - key: CLAUDE_MODEL
+        scope: run
+        value: claude-opus-4-7
+      - key: APP_NAME
+        scope: run
+        value: Panda-Vision Recruit
+      - key: APP_VERSION
+        scope: run
+        value: "0.1.0"
+      - key: DEBUG
+        scope: run
+        value: "false"
+      - key: LOG_LEVEL
+        scope: run
+        value: INFO
