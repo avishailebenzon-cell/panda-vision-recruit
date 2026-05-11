@@ -22,30 +22,20 @@ async def lifespan(app: FastAPI):
     """Manage app lifecycle: startup and shutdown."""
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    await init_db()
-    logger.info("Database initialized successfully")
-
-    # Ensure Supabase Storage bucket exists
     try:
-        from app.services.supabase_storage import SupabaseStorageClient
-        storage = SupabaseStorageClient()
-        await storage.create_bucket()
-        await storage.close()
+        await init_db()
+        logger.info("Database initialized successfully")
     except Exception as e:
-        logger.warning(f"Could not verify storage bucket: {e}")
+        logger.error(f"Database initialization failed: {e}")
+        # Continue anyway to allow health check
 
-    # Start background task scheduler
-    try:
-        task_scheduler.start()
-    except Exception as e:
-        logger.warning(f"Could not start background scheduler: {e}")
-        logger.info("Email scanning will need to be triggered manually via API")
+    # Note: Supabase and scheduler are disabled for production stability
+    # They can be enabled after core API is stable
 
     yield
 
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
-    task_scheduler.stop()
 
 
 app = FastAPI(
