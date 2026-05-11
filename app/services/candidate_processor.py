@@ -17,7 +17,7 @@ class CandidateProcessor:
     SECURITY_KEYWORDS = {
         SecurityLevel.TOP_SECRET: [
             "סגור לגמרי", "top secret", "סוד עליון", "סוד מדינה",
-            "ביטחוני ביותר", "הסדר סוד", "צה"ל", "משרד הביטחון"
+            "ביטחוני ביותר", "הסדר סוד", "צהל", "משרד הביטחון"
         ],
         SecurityLevel.SECRET: [
             "secret", "סוד", "סודי", "סודיות",
