@@ -1,0 +1,78 @@
+{
+  "name": "CustomChafshanConfig",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "\u05e9\u05dd \u05d4\u05d7\u05e4\u05e9\u05df (\u05dc\u05d3\u05d5\u05d2\u05de\u05d4: \u05d7\u05e4\u05e9\u05df \u05e8\u05e4\u05d0\u05dc)"
+    },
+    "description": {
+      "type": "string",
+      "description": "\u05ea\u05d9\u05d0\u05d5\u05e8 \u05e7\u05e6\u05e8 \u05e9\u05dc \u05d4\u05d7\u05e4\u05e9\u05df"
+    },
+    "color_theme": {
+      "type": "string",
+      "enum": [
+        "blue",
+        "green",
+        "red",
+        "purple",
+        "orange",
+        "pink",
+        "teal",
+        "yellow"
+      ],
+      "default": "blue",
+      "description": "\u05e2\u05e8\u05db\u05ea \u05d4\u05e6\u05d1\u05e2\u05d9\u05dd \u05e9\u05dc \u05d4\u05d7\u05e4\u05e9\u05df"
+    },
+    "search_type": {
+      "type": "string",
+      "enum": [
+        "keywords_in_job_history",
+        "exact_security_clearance",
+        "keywords_in_full_text"
+      ],
+      "description": "\u05e1\u05d5\u05d2 \u05d4\u05d7\u05d9\u05e4\u05d5\u05e9: \u05de\u05d9\u05dc\u05d5\u05ea \u05de\u05e4\u05ea\u05d7 \u05d1\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d9\u05ea \u05e2\u05d1\u05d5\u05d3\u05d4, \u05e1\u05d9\u05d5\u05d5\u05d2 \u05d1\u05d8\u05d7\u05d5\u05e0\u05d9 \u05de\u05d3\u05d5\u05d9\u05e7, \u05d0\u05d5 \u05de\u05d9\u05dc\u05d5\u05ea \u05de\u05e4\u05ea\u05d7 \u05d1\u05db\u05dc \u05d4\u05d8\u05e7\u05e1\u05d8"
+    },
+    "search_keywords": {
+      "type": "string",
+      "description": "\u05de\u05d9\u05dc\u05d5\u05ea \u05de\u05e4\u05ea\u05d7 \u05dc\u05d7\u05d9\u05e4\u05d5\u05e9, \u05de\u05d5\u05e4\u05e8\u05d3\u05d5\u05ea \u05d1\u05e4\u05e1\u05d9\u05e7 (\u05dc\u05d3\u05d5\u05d2\u05de\u05d4: \u05e8\u05e4\u05d0\u05dc,rafael,raphael)"
+    },
+    "security_clearance_value": {
+      "type": "string",
+      "description": "\u05e2\u05e8\u05da \u05e1\u05d9\u05d5\u05d5\u05d2 \u05d1\u05d8\u05d7\u05d5\u05e0\u05d9 \u05dc\u05d7\u05d9\u05e4\u05d5\u05e9 \u05de\u05d3\u05d5\u05d9\u05e7 (\u05e8\u05dc\u05d5\u05d5\u05e0\u05d8\u05d9 \u05e8\u05e7 \u05dc\u05e1\u05d5\u05d2 \u05d7\u05d9\u05e4\u05d5\u05e9 'exact_security_clearance')"
+    },
+    "search_fields": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "job_companies",
+          "job_descriptions",
+          "job_roles",
+          "main_experience",
+          "full_text",
+          "skills_summary",
+          "military_service",
+          "education"
+        ]
+      },
+      "description": "\u05e9\u05d3\u05d5\u05ea \u05d1\u05e7\u05d5\u05e8\u05d5\u05ea \u05d4\u05d7\u05d9\u05d9\u05dd \u05dc\u05d7\u05d9\u05e4\u05d5\u05e9"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "\u05d4\u05d0\u05dd \u05d4\u05d7\u05e4\u05e9\u05df \u05e4\u05e2\u05d9\u05dc"
+    },
+    "min_keyword_length": {
+      "type": "number",
+      "default": 3,
+      "description": "\u05d0\u05d5\u05e8\u05da \u05de\u05d9\u05e0\u05d9\u05de\u05dc\u05d9 \u05dc\u05de\u05d9\u05dc\u05ea \u05de\u05e4\u05ea\u05d7 (\u05db\u05d3\u05d9 \u05dc\u05de\u05e0\u05d5\u05e2 false positives)"
+    }
+  },
+  "required": [
+    "name",
+    "search_type",
+    "search_keywords"
+  ]
+}

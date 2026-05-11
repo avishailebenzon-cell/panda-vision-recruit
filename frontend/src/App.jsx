@@ -1,56 +1,101 @@
-import { Component } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Sidebar          from './components/layout/Sidebar';
-import Dashboard        from './pages/Dashboard';
-import AgentView        from './pages/AgentView';
-import OrchestratorView from './pages/OrchestratorView';
-import Matches          from './pages/Matches';
-import Candidates       from './pages/Candidates';
-import Jobs             from './pages/Jobs';
-import Settings         from './pages/Settings';
+import './App.css'
+import React, { useState, useEffect } from 'react'
+import { Toaster } from "@/components/ui/toaster"
+import { QueryClientProvider } from '@tanstack/react-query'
+import { queryClientInstance } from '@/lib/query-client'
+import VisualEditAgent from '@/lib/VisualEditAgent'
+import NavigationTracker from '@/lib/NavigationTracker'
+import { pagesConfig } from './pages.config'
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import PageNotFound from './lib/PageNotFound';
+import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import { ViewModeProvider, useViewMode } from '@/components/context/ViewModeContext';
+import MobileApp from './mobile/MobileApp';
+import EtgarPage from './pages/EtgarPage';
+import PipedriveSyncReport from './pages/PipedriveSyncReport';
+import GoldMatchesReport from './pages/GoldMatchesReport';
 
-class ErrorBoundary extends Component {
-  constructor(props) { super(props); this.state = { error: null }; }
-  static getDerivedStateFromError(e) { return { error: e }; }
-  render() {
-    if (this.state.error) {
-      return (
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="panda-card p-6 max-w-lg w-full border-red-500/40">
-            <p className="text-red-400 font-semibold mb-2">שגיאת רינדור</p>
-            <pre className="text-xs text-surface-300 bg-surface-900 p-3 rounded-lg overflow-auto">
-              {this.state.error.message}
-              {'\n'}
-              {this.state.error.stack?.split('\n').slice(0,6).join('\n')}
-            </pre>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
+const { Pages, Layout, mainPage } = pagesConfig;
+const mainPageKey = mainPage ?? Object.keys(Pages)[0];
+const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 
-export default function App() {
-  return (
-    <BrowserRouter>
-      <div className="flex h-screen bg-surface-950 overflow-hidden">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <ErrorBoundary>
-            <Routes>
-              <Route path="/"             element={<Dashboard />} />
-              <Route path="/agents/:agentType" element={<AgentView />} />
-              <Route path="/orchestrator" element={<OrchestratorView />} />
-              <Route path="/matches"      element={<Matches />} />
-              <Route path="/inbox"        element={<Matches />} />
-              <Route path="/candidates"   element={<Candidates />} />
-              <Route path="/jobs"         element={<Jobs />} />
-              <Route path="/settings"     element={<Settings />} />
-            </Routes>
-          </ErrorBoundary>
-        </div>
+const LayoutWrapper = ({ children, currentPageName }) => Layout ?
+  <Layout currentPageName={currentPageName}>{children}</Layout>
+  : <>{children}</>;
+
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, authError, isAuthenticated, navigateToLogin } = useAuth();
+  const { isMobileView } = useViewMode();
+
+  // Show loading spinner while checking app public settings or auth
+  if (isLoadingPublicSettings || isLoadingAuth) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-slate-200 border-t-slate-800 rounded-full animate-spin"></div>
       </div>
-    </BrowserRouter>
+    );
+  }
+
+  // Handle authentication errors
+  if (authError) {
+    if (authError.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
+    } else if (authError.type === 'auth_required') {
+      // Redirect to login automatically
+      navigateToLogin();
+      return null;
+    }
+  }
+
+  // Render mobile or desktop app based on view mode
+  if (isMobileView) {
+    return <MobileApp />;
+  }
+
+  // Render the main app
+  return (
+    <Routes>
+      <Route path="/" element={
+        <LayoutWrapper currentPageName={mainPageKey}>
+          <MainPage />
+        </LayoutWrapper>
+      } />
+      {Object.entries(Pages).map(([path, Page]) => (
+        <Route
+          key={path}
+          path={`/${path}`}
+          element={
+            <LayoutWrapper currentPageName={path}>
+              <Page />
+            </LayoutWrapper>
+          }
+        />
+      ))}
+      <Route path="/EtgarPage" element={<LayoutWrapper currentPageName="EtgarPage"><EtgarPage /></LayoutWrapper>} />
+      <Route path="/PipedriveSyncReport" element={<LayoutWrapper currentPageName="PipedriveSyncReport"><PipedriveSyncReport /></LayoutWrapper>} />
+      <Route path="/GoldMatchesReport" element={<LayoutWrapper currentPageName="GoldMatchesReport"><GoldMatchesReport /></LayoutWrapper>} />
+      <Route path="*" element={<PageNotFound />} />
+    </Routes>
   );
+};
+
+
+function App() {
+  return (
+    <AuthProvider>
+      <ViewModeProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+          <VisualEditAgent />
+        </QueryClientProvider>
+      </ViewModeProvider>
+    </AuthProvider>
+  )
 }
+
+export default App
