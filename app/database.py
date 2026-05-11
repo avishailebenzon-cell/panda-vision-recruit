@@ -8,12 +8,22 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
+# Validate DATABASE_URL is properly set
+if not settings.database_url or settings.database_url == "postgresql://user:password@localhost:5432/panda_vision_recruit":
+    logger.warning(f"DATABASE_URL appears to be default/invalid: {settings.database_url[:30]}...")
+
 # Create engine with proper connection pooling
-engine = create_engine(
-    settings.database_url,
-    echo=settings.debug,
-    poolclass=NullPool,  # Useful for serverless environments
-)
+try:
+    engine = create_engine(
+        settings.database_url,
+        echo=settings.debug,
+        poolclass=NullPool,  # Useful for serverless environments
+        connect_args={"timeout": 10},  # Add timeout to prevent hanging
+    )
+    logger.info("Database engine created successfully")
+except Exception as e:
+    logger.error(f"Failed to create database engine: {e}")
+    raise
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
