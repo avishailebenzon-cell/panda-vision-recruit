@@ -22,15 +22,16 @@ async def lifespan(app: FastAPI):
     """Manage app lifecycle: startup and shutdown."""
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    try:
-        await init_db()
-        logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Database initialization failed: {e}")
-        # Continue anyway to allow health check
 
-    # Note: Supabase and scheduler are disabled for production stability
-    # They can be enabled after core API is stable
+    # Database init temporarily disabled - it's hanging
+    # TODO: Debug database connection issues
+    # try:
+    #     await init_db()
+    #     logger.info("Database initialized successfully")
+    # except Exception as e:
+    #     logger.error(f"Database initialization failed: {e}")
+
+    logger.info("App initialization complete (database init disabled)")
 
     yield
 
