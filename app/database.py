@@ -30,10 +30,29 @@ def get_db() -> Session:
 
 
 async def init_db():
-    """Initialize database tables."""
+    """Initialize database tables and run lightweight migrations."""
     try:
         Base.metadata.create_all(bind=engine)
-        logger.info("Database initialized successfully")
+        logger.info("Database tables verified")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
         raise
+
+    # ── Schema migrations (idempotent) ────────────────────────────────────────
+    from sqlalchemy import text
+    migrations = [
+        # New columns: org and contact name from Pipedrive
+        "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS org_name     TEXT",
+        "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS contact_name TEXT",
+        # Remove enum check constraints so we can store raw Pipedrive labels
+        "ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_priority_check",
+        "ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_security_level_check",
+    ]
+    with engine.connect() as conn:
+        for sql in migrations:
+            try:
+                conn.execute(text(sql))
+                conn.commit()
+                logger.info(f"Migration OK: {sql[:60]}")
+            except Exception as e:
+                logger.warning(f"Migration skipped ({sql[:60]}): {e}")

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer, Enum
+from sqlalchemy import Column, String, DateTime, Boolean, Text, Integer
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -30,14 +30,14 @@ class Candidate(Base):
     location = Column(String(255), nullable=True)
 
     # Security classification
-    security_level = Column(Enum(SecurityLevel), default=SecurityLevel.NO_SECURITY, nullable=False)
+    security_level = Column(String(50), default=SecurityLevel.NO_SECURITY.value, nullable=False)
 
     # Tracking dates
     email_received_date = Column(DateTime, default=datetime.utcnow, nullable=False)
     scanned_date = Column(DateTime, default=datetime.utcnow, nullable=False, onupdate=datetime.utcnow)
 
     # Status
-    status = Column(Enum(CandidateStatus), default=CandidateStatus.ACTIVE, nullable=False, index=True)
+    status = Column(String(50), default=CandidateStatus.ACTIVE.value, nullable=False, index=True)
 
     # Additional info
     resume_url = Column(String(255), nullable=True)

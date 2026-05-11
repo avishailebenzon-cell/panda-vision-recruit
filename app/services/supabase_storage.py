@@ -19,13 +19,20 @@ class SupabaseStorageClient:
 
     def __init__(self):
         self.supabase_url = settings.supabase_url.rstrip("/")
-        self.api_key = settings.supabase_key
+        # Use service_role key for storage — anon key lacks upload/bucket permissions.
+        # Falls back to anon key if service key not configured.
+        self.api_key = settings.supabase_service_key or settings.supabase_key
         self.bucket_name = settings.supabase_storage_bucket
         self.base_url = f"{self.supabase_url}/storage/v1"
         self.client = httpx.AsyncClient()
 
         if not self.supabase_url or not self.api_key:
             logger.warning("Supabase credentials not configured")
+        elif not settings.supabase_service_key:
+            logger.warning(
+                "SUPABASE_SERVICE_KEY not set — storage uploads will likely fail. "
+                "Add your service_role key to .env as SUPABASE_SERVICE_KEY."
+            )
 
     def _get_headers(self) -> dict:
         """Get authorization headers."""
@@ -181,14 +188,19 @@ class SupabaseStorageClient:
             )
 
             if response.status_code in [200, 201]:
-                logger.info(f"Created bucket: {self.bucket_name}")
+                logger.info(f"Created storage bucket: {self.bucket_name}")
                 return True
-            elif response.status_code == 400:
-                # Bucket already exists
-                logger.info(f"Bucket already exists: {self.bucket_name}")
-                return True
+            elif response.status_code in [400, 409]:
+                # 409 = Conflict (already exists), 400 can also mean already exists
+                body = response.text
+                if "already exists" in body.lower():
+                    logger.info(f"Storage bucket already exists: {self.bucket_name}")
+                    return True
+                else:
+                    logger.error(f"Failed to create bucket ({response.status_code}): {body}")
+                    return False
             else:
-                logger.error(f"Failed to create bucket: {response.status_code}")
+                logger.error(f"Failed to create bucket ({response.status_code}): {response.text}")
                 return False
 
         except Exception as e:

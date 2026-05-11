@@ -8,7 +8,8 @@ class Settings(BaseSettings):
 
     # Supabase Configuration
     supabase_url: str = ""
-    supabase_key: str = ""
+    supabase_key: str = ""              # anon/public key (read-only for storage)
+    supabase_service_key: str = ""     # service_role key (needed for storage uploads)
     supabase_storage_bucket: str = "cv-files"
 
     # Pipedrive

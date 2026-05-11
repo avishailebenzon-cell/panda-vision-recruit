@@ -1,9 +1,10 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
 from app.config import get_settings
 from app.database import init_db
-from app.api import health, candidates, jobs, email_scanner, agents
+from app.api import health, candidates, jobs, email_scanner, agents, matches, synonyms, logs, feedback
 from app.tasks.scheduler import task_scheduler
 
 # Configure logging
@@ -23,6 +24,15 @@ async def lifespan(app: FastAPI):
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
     await init_db()
     logger.info("Database initialized successfully")
+
+    # Ensure Supabase Storage bucket exists
+    try:
+        from app.services.supabase_storage import SupabaseStorageClient
+        storage = SupabaseStorageClient()
+        await storage.create_bucket()
+        await storage.close()
+    except Exception as e:
+        logger.warning(f"Could not verify storage bucket: {e}")
 
     # Start background task scheduler
     try:
@@ -45,12 +55,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# CORS — allow frontend dev server and production
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173", "http://localhost:3000", "*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 # Include routers
 app.include_router(health.router)
 app.include_router(candidates.router)
 app.include_router(jobs.router)
+app.include_router(matches.router)
 app.include_router(email_scanner.router)
 app.include_router(agents.router)
+app.include_router(synonyms.router)
+app.include_router(logs.router)
+app.include_router(feedback.router)
 
 
 @app.get("/")

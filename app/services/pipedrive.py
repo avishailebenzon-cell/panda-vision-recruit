@@ -9,6 +9,39 @@ logger = logging.getLogger(__name__)
 
 settings = get_settings()
 
+# ── Pipedrive custom field keys ───────────────────────────────────────────────
+# These are the hash keys for the custom fields defined in the Pandatech Pipedrive account.
+# To refresh: GET /v1/dealFields and match by 'name'.
+FIELD_JOB_TITLE    = 'c616325e1187aaa05257f6d4cd9cc3626679b23f'
+FIELD_JOB_DESC     = '9ed8654203d45357d76e8f83ca5a8584f5f8e2fb'
+FIELD_JOB_QUAL     = '5198dc3d914cb437bf95133a64809a30f69e3b02'
+FIELD_JOB_LOCATION = 'd04ed525f3ed45fb04383e07f281ad7338a30e4e_formatted_address'
+FIELD_PRIORITY     = '360108d810b89e174c7ca6a3a8222eebfd278bf6'
+FIELD_SECURITY     = '9997b3547b9295447c03c98343a50f4d8d097361'
+
+# Priority: Pipedrive enum option IDs → Hebrew display labels (stored as-is, no mapping)
+PRIORITY_LABEL_MAP: dict = {
+    '390': 'עדיפות גיוס 1',
+    '391': 'עדיפות גיוס 2',
+    '392': 'עדיפות גיוס 3',
+    '393': 'עדיפות גיוס 4',
+    '394': 'עדיפות גיוס 5',
+}
+
+
+def _parse_priority(raw) -> str:
+    """Return the Hebrew label for a Pipedrive priority option ID.
+    Falls back to the raw value if the ID is not in the map."""
+    if not raw:
+        return ''
+    s = str(raw).strip()
+    return PRIORITY_LABEL_MAP.get(s, s)
+
+
+def _parse_security(raw) -> str:
+    """Return the raw Pipedrive security clearance text as-is."""
+    return str(raw).strip() if raw else ''
+
 
 class PipedriveService:
     """Service for Pipedrive API integration."""
@@ -58,10 +91,10 @@ class PipedriveService:
                 if not items:
                     break
 
-                # Filter deals with non-empty job_title field
+                # Only include deals where the dedicated job_title custom field is filled.
                 for deal in items:
-                    job_title = deal.get("job_title") or deal.get("title")
-                    if job_title and job_title.strip():
+                    job_title = deal.get(FIELD_JOB_TITLE)
+                    if job_title and str(job_title).strip():
                         deals.append(deal)
 
                 # Check if there are more results
@@ -81,21 +114,34 @@ class PipedriveService:
     async def sync_open_deals(self) -> Dict[str, int]:
         """
         Sync open deals from Pipedrive to Job table.
-        Returns count of created and updated jobs.
+
+        Logic:
+        - Only deals with a non-empty job_title field are synced.
+        - Deals that were previously synced but no longer have a job_title
+          (or whose deal was closed/deleted) are marked is_active=False.
+        - Returns counts of created, updated, and deactivated jobs.
         """
         try:
             deals = await self.get_open_deals()
-            created_count = 0
-            updated_count = 0
+            created_count   = 0
+            updated_count   = 0
+            deactivated_count = 0
+
+            # Track deal IDs that pass the filter in this sync run
+            synced_deal_ids: set = set()
 
             for deal in deals:
-                deal_id = str(deal.get("id"))
-                title = deal.get("job_title") or deal.get("title", "")
-                description = deal.get("description", "")
-                qualifications = deal.get("qualifications", "")
-                location = deal.get("location", "")
-                priority = deal.get("priority", "medium")
-                security = deal.get("security", "no_security")
+                deal_id       = str(deal.get("id"))
+                title         = (deal.get(FIELD_JOB_TITLE)    or "").strip()
+                description   = (deal.get(FIELD_JOB_DESC)     or "").strip()
+                qualifications= (deal.get(FIELD_JOB_QUAL)     or "").strip()
+                location      = (deal.get(FIELD_JOB_LOCATION) or "").strip()
+                priority      = _parse_priority(deal.get(FIELD_PRIORITY))
+                security      = _parse_security(deal.get(FIELD_SECURITY))
+                org_name      = (deal.get("org_name")    or "").strip()
+                contact_name  = (deal.get("person_name") or "").strip()
+
+                synced_deal_ids.add(deal_id)
 
                 # Check if job already exists
                 existing_job = self.db.query(Job).filter(
@@ -103,24 +149,19 @@ class PipedriveService:
                 ).first()
 
                 try:
-                    # Validate enum values
-                    if priority not in [p.value for p in JobPriority]:
-                        priority = JobPriority.MEDIUM.value
-                    if security not in [s.value for s in SecurityLevel]:
-                        security = SecurityLevel.NO_SECURITY.value
-
                     if existing_job:
-                        # Update existing job
-                        existing_job.title = title
-                        existing_job.description = description
+                        existing_job.title          = title
+                        existing_job.description    = description
                         existing_job.qualifications = qualifications
-                        existing_job.location = location
-                        existing_job.priority = priority
+                        existing_job.location       = location
+                        existing_job.priority       = priority
                         existing_job.security_level = security
+                        existing_job.org_name       = org_name
+                        existing_job.contact_name   = contact_name
+                        existing_job.is_active      = True
                         updated_count += 1
                         logger.info(f"Updated job {deal_id}: {title}")
                     else:
-                        # Create new job
                         job = Job(
                             pipedrive_deal_id=deal_id,
                             title=title,
@@ -129,6 +170,8 @@ class PipedriveService:
                             location=location,
                             priority=priority,
                             security_level=security,
+                            org_name=org_name,
+                            contact_name=contact_name,
                             is_active=True,
                         )
                         self.db.add(job)
@@ -139,12 +182,28 @@ class PipedriveService:
                     logger.error(f"Error processing deal {deal_id}: {e}")
                     continue
 
+            # Deactivate jobs that were NOT in this sync's valid-title deals.
+            # These either had empty job_title or their deal is now closed/deleted.
+            if synced_deal_ids:
+                stale_jobs = self.db.query(Job).filter(
+                    Job.is_active == True,
+                    ~Job.pipedrive_deal_id.in_(synced_deal_ids),
+                ).all()
+                for job in stale_jobs:
+                    job.is_active = False
+                    deactivated_count += 1
+                    logger.info(f"Deactivated job {job.pipedrive_deal_id}: '{job.title}' (not in current valid-title sync)")
+
             self.db.commit()
-            logger.info(f"Sync complete: {created_count} created, {updated_count} updated")
+            logger.info(
+                f"Sync complete: {created_count} created, {updated_count} updated, "
+                f"{deactivated_count} deactivated"
+            )
 
             return {
                 "created": created_count,
                 "updated": updated_count,
+                "deactivated": deactivated_count,
                 "total": len(deals),
             }
 

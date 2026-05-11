@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Enum, ForeignKey, Boolean, JSON
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Boolean, JSON
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -32,10 +32,10 @@ class AgentTask(Base):
 
     # Task identification
     task_type = Column(String(50), nullable=False)  # "classify_job", "match_candidate", etc.
-    status = Column(Enum(TaskStatus), default=TaskStatus.PENDING, nullable=False, index=True)
+    status = Column(String(50), default=TaskStatus.PENDING.value, nullable=False, index=True)
 
     # Agent assignment
-    assigned_agent = Column(Enum(AgentType), nullable=True, index=True)
+    assigned_agent = Column(String(50), nullable=True, index=True)
 
     # Related entities
     job_id = Column(Integer, ForeignKey("jobs.id", ondelete="CASCADE"), nullable=True, index=True)
@@ -75,7 +75,7 @@ class AgentLog(Base):
 
     # Message context
     task_id = Column(Integer, ForeignKey("agent_tasks.id", ondelete="CASCADE"), nullable=True)
-    agent_type = Column(Enum(AgentType), nullable=False, index=True)
+    agent_type = Column(String(50), nullable=False, index=True)
 
     # Communication
     message_type = Column(String(50), nullable=False)  # "input", "output", "error", "feedback"
@@ -107,7 +107,7 @@ class FeedbackLog(Base):
     feedback_text = Column(Text, nullable=True)  # Optional human comment
 
     # Agent learning
-    agent_type = Column(Enum(AgentType), nullable=False, index=True)
+    agent_type = Column(String(50), nullable=False, index=True)
     used_for_learning = Column(Boolean, default=False, nullable=False)
 
     # Timestamps

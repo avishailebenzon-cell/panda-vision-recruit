@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 
@@ -51,8 +51,8 @@ class SpecializedAgent(BaseAgent):
                 "title": job.title,
                 "description": job.description,
                 "qualifications": job.qualifications,
-                "priority": job.priority.value,
-                "security_level": job.security_level.value,
+                "priority": job.priority,
+                "security_level": job.security_level,
             }
 
             candidate_data = {
@@ -60,7 +60,7 @@ class SpecializedAgent(BaseAgent):
                 "last_name": candidate.last_name,
                 "email": candidate.email,
                 "location": candidate.location,
-                "security_level": candidate.security_level.value,
+                "security_level": candidate.security_level,
                 "resume_text": candidate.notes,  # CV text stored in notes
             }
 
@@ -151,8 +151,8 @@ class OrchestratorAgent(BaseAgent):
 משרה: {job.title}
 תיאור: {job.description}
 דרישות: {job.qualifications}
-עדיפות: {job.priority.value}
-סיווג ביטחוני: {job.security_level.value}
+עדיפות: {job.priority}
+סיווג ביטחוני: {job.security_level}
 """
 
             prompt = f"""

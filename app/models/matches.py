@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text, Float, Enum, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, DateTime, Text, Float, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -29,7 +29,7 @@ class Match(Base):
     summary = Column(Text, nullable=False)  # Reasoning for the match
 
     # Status
-    status = Column(Enum(MatchStatus), default=MatchStatus.PENDING, nullable=False, index=True)
+    status = Column(String(50), default=MatchStatus.PENDING.value, nullable=False, index=True)
 
     # Admin approval
     admin_approved = Column(Boolean, default=False, nullable=False)

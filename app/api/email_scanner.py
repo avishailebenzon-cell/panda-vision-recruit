@@ -6,6 +6,7 @@ import logging
 from app.database import get_db
 from app.models.email_logs import EmailScanLog
 from app.services.email_scanner import EmailScanner
+from app.tasks.scheduler import task_scheduler
 
 logger = logging.getLogger(__name__)
 
@@ -94,6 +95,70 @@ async def get_scan_logs(
     except Exception as e:
         logger.error(f"Error fetching scan logs: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch scan logs")
+
+
+@router.post("/scan-start")
+async def start_email_scan():
+    """Enable automatic periodic email scanning."""
+    try:
+        task_scheduler.resume_email_scan()
+        return {"status": "started", "message": "Email scanning enabled — will run every 30 minutes"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/scan-stop")
+async def stop_email_scan():
+    """Pause automatic periodic email scanning."""
+    try:
+        task_scheduler.pause_email_scan()
+        return {"status": "stopped", "message": "Email scanning paused"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/scheduler-status")
+async def get_scheduler_status():
+    """Return current status of all scheduled jobs."""
+    return task_scheduler.get_job_status()
+
+
+@router.get("/scan-status")
+async def get_scan_status(db: Session = Depends(get_db)):
+    """Return current scan progress: last scanned date and scan history summary."""
+    from app.models.settings import Setting
+    from app.services.email_scanner import LAST_SCAN_DATE_KEY
+    try:
+        setting = db.query(Setting).filter(Setting.key == LAST_SCAN_DATE_KEY).first()
+        last_date = setting.value if setting else None
+        total_logs = db.query(EmailScanLog).count()
+        last_log = db.query(EmailScanLog).order_by(EmailScanLog.scan_start_time.desc()).first()
+        return {
+            "last_scanned_date": last_date,
+            "total_scans": total_logs,
+            "last_scan": {
+                "status": last_log.status,
+                "candidates_created": last_log.candidates_created,
+                "scan_start_time": last_log.scan_start_time.isoformat(),
+            } if last_log else None,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/scan-reset")
+async def reset_scan_date(db: Session = Depends(get_db)):
+    """Reset last scan date — next scan will re-process all emails from the beginning."""
+    from app.models.settings import Setting
+    from app.services.email_scanner import LAST_SCAN_DATE_KEY
+    try:
+        setting = db.query(Setting).filter(Setting.key == LAST_SCAN_DATE_KEY).first()
+        if setting:
+            db.delete(setting)
+            db.commit()
+        return {"status": "reset", "message": "Next scan will process all emails from the beginning"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/scan-logs/{log_id}")

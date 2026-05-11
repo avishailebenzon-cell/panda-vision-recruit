@@ -1,0 +1,91 @@
+import {
+  Code2, Cpu, Wrench, TestTube2, Server,
+  Shield, GitBranch, Trash2, Network,
+} from 'lucide-react';
+
+export const AGENTS = [
+  {
+    type:        'orchestrator',
+    label:       'Orchestrator',
+    labelHe:     'מנהל ראשי',
+    icon:        Network,
+    color:       'brand',
+    description: 'מסווג משרות ומנתב לסוכנים המתאימים',
+  },
+  {
+    type:        'software',
+    label:       'Software',
+    labelHe:     'תוכנה',
+    icon:        Code2,
+    color:       'blue',
+    description: 'פיתוח תוכנה, Full-Stack, Backend, Frontend',
+  },
+  {
+    type:        'electronics',
+    label:       'Electronics',
+    labelHe:     'אלקטרוניקה',
+    icon:        Cpu,
+    color:       'yellow',
+    description: 'הנדסת אלקטרוניקה, FPGA, Embedded',
+  },
+  {
+    type:        'mechanical',
+    label:       'Mechanical',
+    labelHe:     'מכני',
+    icon:        Wrench,
+    color:       'orange',
+    description: 'הנדסה מכנית, CAD, ייצור',
+  },
+  {
+    type:        'qa',
+    label:       'QA',
+    labelHe:     'בקרת איכות',
+    icon:        TestTube2,
+    color:       'green',
+    description: 'בדיקות תוכנה, אוטומציה, QA',
+  },
+  {
+    type:        'it',
+    label:       'IT',
+    labelHe:     'מערכות מידע',
+    icon:        Server,
+    color:       'purple',
+    description: 'DevOps, Cloud, תשתיות IT',
+  },
+  {
+    type:        'cybersecurity',
+    label:       'Cybersecurity',
+    labelHe:     'סייבר',
+    icon:        Shield,
+    color:       'red',
+    description: 'אבטחת מידע, סייבר, SOC',
+  },
+  {
+    type:        'systems_engineering',
+    label:       'Systems',
+    labelHe:     'הנדסת מערכות',
+    icon:        GitBranch,
+    color:       'teal',
+    description: 'הנדסת מערכות, אינטגרציה',
+  },
+  {
+    type:        'garbage_collector',
+    label:       'Garbage Collector',
+    labelHe:     'מסנן',
+    icon:        Trash2,
+    color:       'gray',
+    description: 'מסנן קורות חיים לא רלוונטיים',
+  },
+];
+
+export const AGENT_COLORS = {
+  brand:  { dot: 'bg-brand-400',  text: 'text-brand-400',  bg: 'bg-brand-500/10',  border: 'border-brand-500/30'  },
+  blue:   { dot: 'bg-blue-400',   text: 'text-blue-400',   bg: 'bg-blue-500/10',   border: 'border-blue-500/30'   },
+  yellow: { dot: 'bg-yellow-400', text: 'text-yellow-400', bg: 'bg-yellow-500/10', border: 'border-yellow-500/30' },
+  orange: { dot: 'bg-orange-400', text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/30' },
+  green:  { dot: 'bg-green-400',  text: 'text-green-400',  bg: 'bg-green-500/10',  border: 'border-green-500/30'  },
+  purple: { dot: 'bg-purple-400', text: 'text-purple-400', bg: 'bg-purple-500/10', border: 'border-purple-500/30' },
+  red:    { dot: 'bg-red-400',    text: 'text-red-400',    bg: 'bg-red-500/10',    border: 'border-red-500/30'    },
+  teal:   { dot: 'bg-teal-400',   text: 'text-teal-400',   bg: 'bg-teal-500/10',   border: 'border-teal-500/30'   },
+  gray:   { dot: 'bg-surface-400',text: 'text-surface-400',bg: 'bg-surface-700/40',border: 'border-surface-600'   },
+};

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Integer, Text, Enum, Float, Boolean
+from sqlalchemy import Column, String, DateTime, Integer, Text, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -34,12 +34,14 @@ class Job(Base):
     location = Column(String(255), nullable=True)
 
     # Security and priority
-    security_level = Column(Enum(SecurityLevel), default=SecurityLevel.NO_SECURITY, nullable=False)
-    priority = Column(Enum(JobPriority), default=JobPriority.MEDIUM, nullable=False, index=True)
+    security_level = Column(String(50), default=SecurityLevel.NO_SECURITY.value, nullable=False)
+    priority = Column(String(50), default=JobPriority.MEDIUM.value, nullable=False, index=True)
 
     # Additional fields
-    department = Column(String(255), nullable=True)
+    department   = Column(String(255), nullable=True)
     salary_range = Column(String(255), nullable=True)
+    org_name     = Column(Text, nullable=True)   # Organization from Pipedrive
+    contact_name = Column(Text, nullable=True)   # Contact person from Pipedrive
 
     # Status tracking
     is_active = Column(Boolean, default=True, nullable=False, index=True)

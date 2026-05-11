@@ -79,8 +79,8 @@ async def get_agent_tasks(
                 {
                     "id": t.id,
                     "task_type": t.task_type,
-                    "status": t.status.value,
-                    "agent": t.assigned_agent.value if t.assigned_agent else None,
+                    "status": t.status,
+                    "agent": t.assigned_agent,
                     "job_id": t.job_id,
                     "candidate_id": t.candidate_id,
                     "retry_count": t.retry_count,
@@ -113,8 +113,8 @@ async def get_agent_task_details(task_id: int, db: Session = Depends(get_db)):
         return {
             "id": task.id,
             "task_type": task.task_type,
-            "status": task.status.value,
-            "agent": task.assigned_agent.value if task.assigned_agent else None,
+            "status": task.status,
+            "agent": task.assigned_agent,
             "job_id": task.job_id,
             "candidate_id": task.candidate_id,
             "input_data": task.input_data,
@@ -210,7 +210,7 @@ async def get_system_status(db: Session = Depends(get_db)):
                 {
                     "id": t.id,
                     "task_type": t.task_type,
-                    "agent": t.assigned_agent.value if t.assigned_agent else None,
+                    "agent": t.assigned_agent,
                     "started_at": t.started_at.isoformat(),
                 }
                 for t in stuck

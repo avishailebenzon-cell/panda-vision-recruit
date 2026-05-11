@@ -23,11 +23,16 @@ async def get_jobs(
     try:
         query = db.query(Job)
 
-        if priority and priority in [p.value for p in JobPriority]:
-            query = query.filter(Job.priority == priority)
-
+        # Only return jobs with a non-empty title AND that are active.
+        # is_active=False means the deal had no job_title in Pipedrive, or was closed/deleted.
+        query = query.filter(Job.title != None, Job.title != '')
         if is_active is not None:
             query = query.filter(Job.is_active == is_active)
+        else:
+            query = query.filter(Job.is_active == True)
+
+        if priority and priority in [p.value for p in JobPriority]:
+            query = query.filter(Job.priority == priority)
 
         total = query.count()
         jobs = query.offset(skip).limit(limit).all()
@@ -40,12 +45,19 @@ async def get_jobs(
                 {
                     "id": j.id,
                     "title": j.title,
+                    "department": j.department,
+                    "description": j.description,
+                    "qualifications": j.qualifications,
                     "location": j.location,
-                    "priority": j.priority.value,
-                    "security_level": j.security_level.value,
+                    "salary_range": j.salary_range,
+                    "priority": j.priority,
+                    "security_level": j.security_level,
                     "is_active": j.is_active,
+                    "org_name": j.org_name,
+                    "contact_name": j.contact_name,
                     "pipedrive_deal_id": j.pipedrive_deal_id,
                     "created_at": j.created_at.isoformat(),
+                    "updated_at": j.updated_at.isoformat(),
                 }
                 for j in jobs
             ]
@@ -69,8 +81,8 @@ async def get_job(job_id: int, db: Session = Depends(get_db)):
             "qualifications": job.qualifications,
             "description": job.description,
             "location": job.location,
-            "priority": job.priority.value,
-            "security_level": job.security_level.value,
+            "priority": job.priority,
+            "security_level": job.security_level,
             "department": job.department,
             "salary_range": job.salary_range,
             "is_active": job.is_active,
