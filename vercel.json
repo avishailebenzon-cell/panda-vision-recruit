@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "outputDirectory": "frontend/dist",
+  "framework": "vite",
+  "regions": ["cdg1"],
+  "env": {
+    "VITE_API_URL": "@vite_api_url"
+  },
+  "build": {
+    "env": {
+      "VITE_API_URL": "@vite_api_url"
+    }
+  }
+}
