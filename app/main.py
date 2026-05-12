@@ -23,15 +23,15 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info(f"Starting {settings.app_name} v{settings.app_version}")
 
-    # Database init temporarily disabled - it's hanging
-    # TODO: Debug database connection issues
-    # try:
-    #     await init_db()
-    #     logger.info("Database initialized successfully")
-    # except Exception as e:
-    #     logger.error(f"Database initialization failed: {e}")
+    # Initialize database tables
+    try:
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization failed: {e}")
+        raise
 
-    logger.info("App initialization complete (database init disabled)")
+    logger.info("App initialization complete")
 
     yield
 
