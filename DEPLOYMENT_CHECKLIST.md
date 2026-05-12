@@ -34,13 +34,13 @@ The following environment variables must be set in the Render service settings:
 DATABASE_URL=postgresql://...
 
 # Supabase Configuration
-SUPABASE_URL=https://...
-SUPABASE_KEY=eyJ...
-SUPABASE_SERVICE_KEY=eyJ...
+SUPABASE_URL=postgresql://postgres.xfxmjsyggbnreukauvhe:HGHgwc8Udd%21%21ZFy@aws-1-ap-northeast-1.pooler.supabase.com:6543/postgres?sslmode=require
+SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmeG1qc3lnZ2JucmV1a2F1dmhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNTkxMTQsImV4cCI6MjA5MzYzNTExNH0.d7JyOVV16AQOAf78sZkMWLUrhK6-fvocfJjmz38_PVQ
+SUPABASE_SERVICE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhmeG1qc3lnZ2JucmV1a2F1dmhlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODA1OTExNCwiZXhwIjoyMDkzNjM1MTE0fQ.lx1Ld9lk9EDWoV9sPh4Rk_PgZbzQ77iLOWPdCvZJhHM
 SUPABASE_STORAGE_BUCKET=cv-files
 
 # Pipedrive Integration
-PIPEDRIVE_API_KEY=...
+PIPEDRIVE_API_KEY=b1dfbd1dced30682d9cc9759d1004f6dab190d7e
 PIPEDRIVE_BASE_URL=https://api.pipedrive.com/v1
 
 # Azure / Microsoft Graph Email Integration
