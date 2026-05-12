@@ -39,8 +39,8 @@ def get_db() -> Session:
         db.close()
 
 
-async def init_db():
-    """Initialize database tables and run lightweight migrations."""
+def init_db_sync():
+    """Initialize database tables (synchronous operation)."""
     try:
         Base.metadata.create_all(bind=engine)
         logger.info("Database tables verified")
@@ -58,11 +58,22 @@ async def init_db():
         "ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_priority_check",
         "ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_security_level_check",
     ]
-    with engine.connect() as conn:
-        for sql in migrations:
-            try:
-                conn.execute(text(sql))
-                conn.commit()
-                logger.info(f"Migration OK: {sql[:60]}")
-            except Exception as e:
-                logger.warning(f"Migration skipped ({sql[:60]}): {e}")
+    try:
+        with engine.connect() as conn:
+            for sql in migrations:
+                try:
+                    conn.execute(text(sql))
+                    conn.commit()
+                    logger.info(f"Migration OK: {sql[:60]}")
+                except Exception as e:
+                    logger.warning(f"Migration skipped ({sql[:60]}): {e}")
+    except Exception as e:
+        logger.error(f"Migration process failed: {e}")
+
+
+async def init_db():
+    """Initialize database tables asynchronously."""
+    # Run sync DB operation in a thread pool to avoid blocking
+    import asyncio
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, init_db_sync)
