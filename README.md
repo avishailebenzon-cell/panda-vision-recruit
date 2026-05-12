@@ -1,6 +1,6 @@
-# Panda-Vision Recruit Backend
+# Panda-Vision Recruit 🤖
 
-AI-powered candidate recruitment management system for PandaTech.
+**AI-Powered Recruitment Management System** - Fully independent from Base44
 
 ## Overview
 
