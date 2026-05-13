@@ -31,12 +31,27 @@ async def lifespan(app: FastAPI):
         logger.error(f"Database initialization failed: {e}")
         raise
 
+    # Start background task scheduler
+    try:
+        task_scheduler.start()
+        logger.info("Background task scheduler started")
+    except Exception as e:
+        logger.error(f"Failed to start task scheduler: {e}")
+        raise
+
     logger.info("App initialization complete")
 
     yield
 
     # Shutdown
     logger.info(f"Shutting down {settings.app_name}")
+
+    # Stop background task scheduler
+    try:
+        task_scheduler.stop()
+        logger.info("Background task scheduler stopped")
+    except Exception as e:
+        logger.error(f"Error stopping task scheduler: {e}")
 
 
 app = FastAPI(
